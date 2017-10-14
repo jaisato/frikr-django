@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bienvenido a Frikr - El Flickr friki</title>
+</head>
+<body>
+    <h1>Detalle Foto</h1>
+
+    {% if photo %}
+    <h2>{{ photo.name }}</h2>
+
+    <img src="{{ photo.url }}" alt="{{ photo.name }}">
+    <p>
+        <strong>Descripción:</strong>
+        {{ photo.description}}
+    </p>
+    <p>
+        <strong>Autor:</strong>
+        {{ photo.owner.first_name }}
+        {{ photo.owner.last_name }}
+    </p>
+    {% else %}
+        <p>No photo available</p>
+    {% endif %}
+
+    <a href="/">Home</a>
+</body>
+</html>
