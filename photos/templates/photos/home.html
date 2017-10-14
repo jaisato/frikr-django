@@ -5,12 +5,17 @@
     <title>Bienvenido a Frikr - El Flickr friki</title>
 </head>
 <body>
-    <h1>¡Bienvenido a Frikr!</h1>
+    <h1>Bienvenido a Frikr</h1>
 
-    {% if photos %}
+    <h2>Últimas fotos publicadas</h2>
+
+    {% if photos|length > 0 %}
     <ul>
     {% for photo in photos %}
-        <li><a href="{{ photo.url }}/">{{ photo.name }} ({{ photo.description }})</a></li>
+        <li>
+            <p>{{ photo.name }}: {{ photo.description}}</p>
+            <img src="{{ photo.url }}" alt="{{ photo.name }}" height="150">
+        </li>
     {% endfor %}
     </ul>
     {% else %}
