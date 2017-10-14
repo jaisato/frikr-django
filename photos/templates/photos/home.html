@@ -13,8 +13,10 @@
     <ul>
     {% for photo in photos %}
         <li>
-            <p>{{ photo.name }}: {{ photo.description}}</p>
-            <img src="{{ photo.url }}" alt="{{ photo.name }}" height="150">
+            <a href="photos/{{ photo.id }}">{{ photo.name }}</a>
+            <p>
+                <img src="{{ photo.url }}" alt="{{ photo.name }}" height="150">
+            </p>
         </li>
     {% endfor %}
     </ul>
