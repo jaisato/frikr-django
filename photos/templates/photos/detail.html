@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Bienvenido a Frikr - El Flickr friki</title>
-</head>
-<body>
-    <h1>Detalle Foto</h1>
+{% extends 'base.html' %}
 
+{% block title %} Detalle Foto {% endblock %}
+
+{% block section %}
     {% if photo %}
     <h2>{{ photo.name }}</h2>
 
@@ -23,7 +19,4 @@
     {% else %}
         <p>No photo available</p>
     {% endif %}
-
-    <a href="/">Home</a>
-</body>
-</html>
+{% endblock %}

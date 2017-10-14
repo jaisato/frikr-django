@@ -1,10 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Bienvenido a Frikr - El Flickr friki</title>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block section %}
     <h1>Bienvenido a Frikr</h1>
 
     <h2>Últimas fotos publicadas</h2>
@@ -23,5 +19,4 @@
     {% else %}
         <p>No photos available.</p>
     {% endif %}
-</body>
-</html>
+{% endblock %}
