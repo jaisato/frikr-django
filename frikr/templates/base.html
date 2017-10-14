@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %} Bienvenido a Frikr - El Flickr friki {% endblock %}</title>
+</head>
+<body>
+    <nav>
+        <a href="/">Home</a>
+        <hr>
+
+        <section>
+        {% block section %}{% endblock %}
+        </section>
+        <hr>
+
+        <small>{% block footer %}Frikr Inc &copy; Todos los derechos reservados {% endblock %}</small>
+    </nav>
+</body>
+</html>
