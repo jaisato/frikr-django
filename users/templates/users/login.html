@@ -4,17 +4,7 @@
 
 {% block section %}
 
-<form method="post" action="">
-    {% csrf_token %}
-
-    <div>
-        <input type="text" name="usr" placeholder="nombre de usuario">
-    </div>
-    <div>
-        <input type="password" name="pwd" placeholder="password">
-    </div>
-
-    {% if errors|length > 0 %}
+{% if errors|length > 0 %}
     <div>
         {% for error in errors %}
         <span>{{ error }}</span>
@@ -22,6 +12,20 @@
         {% endfor %}
     </div>
     {% endif %}
+
+<form method="post" action="">
+    {% csrf_token %}
+
+    <!--<div>
+        <input type="text" name="usr" placeholder="nombre de usuario">
+    </div>
+    <div>
+        <input type="password" name="pwd" placeholder="password">
+    </div>-->
+
+    <table>
+        {{ login_form.as_p }}
+    </table>
 
     <button type="submit">Entrar</button>
 </form>
