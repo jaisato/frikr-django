@@ -14,8 +14,23 @@ class PhotoAdmin(admin.ModelAdmin):
 	def owner_name(self, obj):
 		return obj.owner.first_name + ' ' + obj.owner.last_name
 
-	owner_name.short_description = 'Photo owner'
+	owner_name.short_description = 'Owner name'
 	owner_name.admin_order_field = 'owner'
+
+	fieldsets = (
+		(None, {
+			'fields': ('name',),
+			'classes': ('wide',)
+		}),
+		('Description & Author', {
+			'fields': ('description', 'owner'),
+			'classes': ('wide',)
+		}),
+		('Extra', {
+			'fields' : ('url', 'license', 'visibility'),
+			'classes': ('wide', 'collapse')
+		}),
+	)
 
 
 admin.site.register(Photo, PhotoAdmin)
