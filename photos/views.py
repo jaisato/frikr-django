@@ -9,7 +9,7 @@ from django.utils.decorators import method_decorator
 
 from photos.forms import PhotoForm
 from photos.models import Photo, PUBLIC
-from django.views.generic import View
+from django.views.generic import View, ListView
 from django.db.models import Q
 
 
@@ -111,7 +111,7 @@ class CreateView(View):
 		return render(request, 'photos/new_photo.html', context)
 
 
-class ListView(View, PhotosQuerySet):
+class PhotoListView(View, PhotosQuerySet):
 
 	def get(self, request):
 		"""
@@ -128,3 +128,16 @@ class ListView(View, PhotosQuerySet):
 			photosView.append(photoData)
 
 		return render(request, 'photos/photos_list.html', {"photos_list": photosView})
+
+
+class UserPhotoListView(ListView):
+	"""
+	List of user photos (using generic view ListView)
+	"""
+	model = Photo
+	template_name = 'photos/user_photos.html'
+	context_object_name = 'user_photos'
+
+	def get_queryset(self):
+		qs = super(UserPhotoListView, self).get_queryset()
+		return qs.filter(owner=self.request.user)
