@@ -1,13 +1,15 @@
 {% extends 'base.html' %}
 
 {% block section %}
-    <h2>Lista de Fotos</h2>
+<div class="col-xs-offset-3 col-xs-6 col-md-offset-4 col-md-4">
+    <h2 class="text-center">Lista de Fotos</h2>
 
     {% if photos_list|length > 0 %}
-    <ul>
+    <div class="list-group">
     {% include 'photos/photos_loop.html' with photos=photos_list %}
-    </ul>
+    </div>
     {% else %}
         <p>No photos available.</p>
     {% endif %}
+</div>
 {% endblock %}

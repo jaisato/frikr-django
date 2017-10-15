@@ -1,13 +1,15 @@
 {% extends 'base.html' %}
 
 {% block section %}
-    <h2>Últimas fotos publicadas</h2>
+<div class="col-xs-offset-3 col-xs-6 col-md-offset-4 col-md-4">
+    <h2 class="text-center">Últimas fotos publicadas</h2>
 
     {% if last_photos|length > 0 %}
-    <ul>
+    <div class="list-group">
     {% include 'photos/photos_loop.html' with photos=last_photos %}
-    </ul>
+    </div>
     {% else %}
         <p>No photos available.</p>
     {% endif %}
+</div>
 {% endblock %}

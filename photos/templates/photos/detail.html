@@ -4,19 +4,21 @@
 
 {% block section %}
     {% if photo %}
-    <h2>{{ photo.name }}</h2>
+<div class="col-xs-offset-3 col-xs-6 col-md-offset-4 col-md-4">
+    <h2 class="text-center">{{ photo.name }}</h2>
 
-    <img src="{{ photo.url }}" alt="{{ photo.name }}" height="600">
-    <p>
+    <img src="{{ photo.url }}" alt="{{ photo.name }}" class="img-rounded center-block" height="50%" width="50%">
+    <p class="text-info col-md-offset-2" style="margin-top: 30px">
         <strong>Descripción:</strong>
         {{ photo.description}}
     </p>
-    <p>
+    <p class="text-info col-md-offset-2" style="margin-top: 15px">
         <strong>Autor:</strong>
         {{ photo.owner.first_name }}
         {{ photo.owner.last_name }}
     </p>
     {% else %}
-        <p>No photo available</p>
+        <p class="text-info">No photo available</p>
     {% endif %}
+</div>
 {% endblock %}

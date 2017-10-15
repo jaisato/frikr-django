@@ -3,30 +3,44 @@
 {% block title %} Login {% endblock %}
 
 {% block section %}
+<div class="col-xs-offset-1 col-xs-8 col-md-offset-3 col-md-6" style="border: hidden">
 
-{% if errors|length > 0 %}
+    <h2>Login</h2>
+
+    {% if errors|length > 0 %}
     <div>
         {% for error in errors %}
         <span>{{ error }}</span>
-        <hr>
         {% endfor %}
     </div>
     {% endif %}
 
-<form method="post" action="">
-    {% csrf_token %}
+    <form method="post" novalidate class="form-control" style="border: 0; padding-top: 30px">
 
-    <!--<div>
-        <input type="text" name="usr" placeholder="nombre de usuario">
-    </div>
-    <div>
-        <input type="password" name="pwd" placeholder="password">
-    </div>-->
+        {% csrf_token %}
 
-    <table>
-        {{ login_form.as_p }}
-    </table>
+        {# Include the hidden fields #}
+        {% for hidden in login_form.hidden_fields %}
+        {{ hidden }}
+        {% endfor %}
 
-    <button type="submit">Entrar</button>
-</form>
+        {# Include the visible fields #}
+        {% for field in login_form.visible_fields %}
+        <div class="form-group row">
+            {{ field.errors }}
+            <div class="col-md-4">
+                {{ field.label_tag }}
+            </div>
+            <div class="col-md-8">
+                {{ field }}
+            </div>
+        </div>
+
+        {% endfor %}
+
+        <button type="submit" class="btn btn-primary">Entrar
+        </button>
+    </form>
+
+</div>
 {% endblock %}

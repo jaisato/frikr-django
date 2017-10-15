@@ -8,30 +8,30 @@
     <link rel="stylesheet" href="{% static 'css/bootstrap-theme.min.css' %}">
 </head>
 <body>
-    <h1>Bienvenido a Frikr</h1>
+    <h1 class="text-center">Bienvenido a Frikr</h1>
 
-    <nav>
-        <a href="{% url 'photos_home' %}">Home</a>
-        |
-        <a href="{% url 'photo_list' %}">Photos</a>
-        |
+    <ul class="nav nav-tabs">
+            <li role="presentation"><a href="{% url 'photos_home' %}">Home</a></li>
+            <li role="presentation"><a href="{% url 'photo_list' %}">Photos</a></li>
         {% if user.is_authenticated %}
-            <a href="{% url 'user_photos' %}">My Photos</a>
-        |
-            <a href="{% url 'photo_create' %}">Add Photo</a>
-        |
-            <a href="{% url 'users_logout' %}">Logout</a>
+            <li role="presentation"><a href="{% url 'user_photos' %}">My Photos</a></li>
+            <li role="presentation"><a href="{% url 'photo_create' %}">Add Photo</a></li>
+            <li role="presentation"><a href="{% url 'users_logout' %}">Logout</a></li>
         {% else %}
-            <a href="{% url 'users_login' %}">Login</a>
+            <li role="presentation"><a href="{% url 'users_login' %}">Login</a></li>
         {% endif %}
-    </nav>
-    <hr>
+    </ul>
 
-    <section>
+    <div class="content container-fluid">
+        <div class="row">
         {% block section %}{% endblock %}
-    </section>
-    <hr>
+        </div>
+    </div>
 
-    <small>{% block footer %}Frikr Inc &copy; Todos los derechos reservados {% endblock %}</small>
+    <div class="footer navbar-fixed-bottom">
+        <span class="text-muted pull-right" style="margin-right: 15px">
+            {% block footer %}Frikr Inc &copy; Todos los derechos reservados {% endblock %}
+        </span>
+    </div>
 </body>
 </html>
