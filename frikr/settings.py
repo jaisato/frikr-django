@@ -145,3 +145,9 @@ LOGGING = {
 
 # Login URL
 LOGIN_URL = '/login' # Url login
+
+# Licenses
+LICENSES = (
+    ('PD', 'Public Domain'),
+    ('TS', 'Trade Secret')
+)
