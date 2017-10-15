@@ -22,7 +22,8 @@ def login(request):
 			else:
 				if user.is_active:
 					dj_login(request, user)
-					return redirect('photos_home')
+					# if next doesn't exist, redirect to home
+					return redirect(request.GET.get('next', 'photos_home'))
 				else:
 					error_msg.append('User is not active')
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Django settings for frikr project.
 
@@ -141,3 +142,6 @@ LOGGING = {
         },
     }
 }
+
+# Login URL
+LOGIN_URL = '/login' # Url login
