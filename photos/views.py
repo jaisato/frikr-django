@@ -10,7 +10,7 @@ from django.utils.decorators import method_decorator
 from photos.forms import PhotoForm
 from photos.models import Photo, PUBLIC
 from django.views.generic import View
-
+from django.db.models import Q
 
 class HomeView(View):
 	def get(self, request):
@@ -26,7 +26,7 @@ class HomeView(View):
 			photoData = {"id": photo.pk, "name": photo.name, "url": photo.url, "description": photo.description}
 			photosView.append(photoData)
 
-		return render(request, 'photos/home.html', {"photos": photosView})
+		return render(request, 'photos/home.html', {"last_photos": photosView})
 
 
 class DetailView(View):
@@ -95,3 +95,28 @@ class CreateView(View):
 			'success_message': success_message
 		}
 		return render(request, 'photos/new_photo.html', context)
+
+
+class ListView(View):
+
+	def get(self, request):
+		"""
+		- List all public photos if user is anonymous
+		- List all public and owned photos of authenticated user
+		- List all photos if authenticated user is administrator
+		:param request: HttpRequest
+		:return: HttpResponse
+		"""
+		if request.user.is_anonymous():
+			photos = Photo.objects.filter(visibility=PUBLIC)
+		elif request.user.is_superuser:
+			photos = Photo.objects.all()
+		else:
+			photos = Photo.objects.filter(Q(owner=request.user) | Q(visibility=PUBLIC))
+
+		photosView = []
+		for photo in photos:
+			photoData = {"id": photo.pk, "name": photo.name, "url": photo.url, "description": photo.description}
+			photosView.append(photoData)
+
+		return render(request, 'photos/photos_list.html', {"photos_list": photosView})

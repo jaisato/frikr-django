@@ -26,6 +26,7 @@ urlpatterns = [
     url(r'^$', photos.HomeView.as_view(), name='photos_home'),
     url(r'^photos/(?P<id>[0-9]+)$', photos.DetailView.as_view(), name='photo_detail'),
     url(r'^photos/new$', photos.CreateView.as_view(), name='photo_create'),
+    url(r'^photos$', photos.ListView.as_view(), name='photo_list'),
 
     # users URLs
     url(r'^login$', users.LoginView.as_view(), name='users_login'),
