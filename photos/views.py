@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseNotFound
 from django.urls import reverse
@@ -51,6 +52,7 @@ def detail(request, id):
 		return HttpResponseNotFound("Photo {0} not found".format(id))
 
 
+@login_required()
 def create(request):
 	"""
 	Renders a form to create a new photo
