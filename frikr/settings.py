@@ -151,3 +151,9 @@ LICENSES = (
     ('PD', 'Public Domain'),
     ('TS', 'Trade Secret')
 )
+
+# Badwords: http://locura51.blogspot.com.es/2012/10/insultos-de-pueblo.html
+PROJECT_BADWORDS = [
+    'Abollao', 'Abrazafarolas', 'Afilasables', 'Analfabestia', 'Apollardao', 'Asustatrenes', 'Bebecharcos',
+    'Cabezabuque', 'Cabezakiko', 'Cagaportales', 'Caracarton', 'Carapan', 'Limpiatubos', 'Morroperca', 'Morroputa'
+]
