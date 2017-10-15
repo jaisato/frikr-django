@@ -3,10 +3,17 @@ from __future__ import unicode_literals
 
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseNotFound
-
+from django.urls import reverse
+from photos.forms import PhotoForm
 from photos.models import Photo, PUBLIC
 
+
 def home(request):
+	"""
+	Shows the photo homepage
+	:param request:
+	:return:
+	"""
 	photos = Photo.objects.filter(visibility=PUBLIC).order_by('-created_at')
 
 	photosView = []
@@ -19,7 +26,7 @@ def home(request):
 
 def detail(request, id):
 	"""
-	Photo detail
+	Renders Photo detail page
 	:param request:
 	:param id:
 	:return:
@@ -42,3 +49,27 @@ def detail(request, id):
 		return render(request, 'photos/detail.html', {"photo": photo})
 	else:
 		return HttpResponseNotFound("Photo {0} not found".format(id))
+
+
+def create(request):
+	"""
+	Renders a form to create a new photo
+	:param request:
+	:return:
+	"""
+	success_message = ''
+	if request.method == 'POST':
+		form = PhotoForm(request.POST)
+		if form.is_valid():
+			photo = form.save() # genera el objeto del formulario, lo guarda en BD y lo devuelve
+			success_message = 'Guardado con éxito! '
+			success_message += '<a href="{0}"'.format(reverse('photo_detail', args=[photo.pk]))+'>'
+			success_message += 'Ver Foto'
+			success_message += '</a>'
+
+	form = PhotoForm()
+	context = {
+		'form': form,
+		'success_message': success_message
+	}
+	return render(request, 'photos/new_photo.html', context)
