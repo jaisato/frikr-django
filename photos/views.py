@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseNotFound
+from django.http import HttpResponseNotFound
 from django.urls import reverse
 from photos.forms import PhotoForm
 from photos.models import Photo, PUBLIC
@@ -60,19 +60,20 @@ def create(request):
 	:return:
 	"""
 	success_message = ''
+	form = PhotoForm()
+
 	if request.method == 'POST':
 		photo_with_owner = Photo()
 		photo_with_owner.owner = request.user
 		form = PhotoForm(request.POST, instance=photo_with_owner)
+
 		if form.is_valid():
 			photo = form.save() # genera el objeto del formulario, lo guarda en BD y lo devuelve
-
 			success_message = 'Guardado con éxito! '
-			success_message += '<a href="{0}"'.format(reverse('photo_detail', args=[photo.pk]))+'>'
+			success_message += '<a href="{0}"'.format(reverse('photo_detail', args=[photo.pk])) + '>'
 			success_message += 'Ver Foto'
 			success_message += '</a>'
 
-	form = PhotoForm()
 	context = {
 		'form': form,
 		'success_message': success_message
