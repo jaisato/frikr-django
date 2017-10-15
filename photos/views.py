@@ -40,7 +40,7 @@ def detail(request, id):
 	except Photo.MultipleObjects:
 		photo = photo[0]
 	"""
-	photos = Photo.objects.filter(pk=id)
+	photos = Photo.objects.filter(pk=id).select_related('owner')
 	if len(photos) == 1:
 		photo = photos[0]
 	else:
