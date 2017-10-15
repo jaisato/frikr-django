@@ -11,6 +11,6 @@ DEFAULT_LICENSES = (
 	(CREATIVE_COMMONS, 'Creative Commons')
 )
 
-LICENSES = getattr(settings, 'LICENSES', DEFAULT_LICENSES)
+LICENSES = DEFAULT_LICENSES + getattr(settings, 'LICENSES', ())
 
 BADWORDS = getattr(settings, 'PROJECT_BADWORDS', [])
