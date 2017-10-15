@@ -12,6 +12,20 @@ from photos.models import Photo, PUBLIC
 from django.views.generic import View
 from django.db.models import Q
 
+
+class PhotosQuerySet(object):
+
+	def get_photos_queryset(self, request):
+		if request.user.is_anonymous():
+			photos = Photo.objects.filter(visibility=PUBLIC)
+		elif request.user.is_superuser:
+			photos = Photo.objects.all()
+		else:
+			photos = Photo.objects.filter(Q(owner=request.user) | Q(visibility=PUBLIC))
+
+		return photos
+
+
 class HomeView(View):
 	def get(self, request):
 		"""
@@ -29,7 +43,7 @@ class HomeView(View):
 		return render(request, 'photos/home.html', {"last_photos": photosView})
 
 
-class DetailView(View):
+class DetailView(View, PhotosQuerySet):
 	def get(self, request, id):
 		"""
 		Renders Photo detail page
@@ -45,7 +59,7 @@ class DetailView(View):
 		except Photo.MultipleObjects:
 			photo = photo[0]
 		"""
-		photos = Photo.objects.filter(pk=id).select_related('owner')
+		photos = self.get_photos_queryset(request).filter(pk=id).select_related('owner')
 		if len(photos) == 1:
 			photo = photos[0]
 		else:
@@ -97,7 +111,7 @@ class CreateView(View):
 		return render(request, 'photos/new_photo.html', context)
 
 
-class ListView(View):
+class ListView(View, PhotosQuerySet):
 
 	def get(self, request):
 		"""
@@ -107,13 +121,7 @@ class ListView(View):
 		:param request: HttpRequest
 		:return: HttpResponse
 		"""
-		if request.user.is_anonymous():
-			photos = Photo.objects.filter(visibility=PUBLIC)
-		elif request.user.is_superuser:
-			photos = Photo.objects.all()
-		else:
-			photos = Photo.objects.filter(Q(owner=request.user) | Q(visibility=PUBLIC))
-
+		photos = self.get_photos_queryset(request)
 		photosView = []
 		for photo in photos:
 			photoData = {"id": photo.pk, "name": photo.name, "url": photo.url, "description": photo.description}
