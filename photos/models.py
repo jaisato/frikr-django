@@ -22,8 +22,11 @@ VISIBILITY = (
 	(PRIVATE, 'Privada')
 )
 
-class Photo(models.Model):
 
+class Photo(models.Model):
+	"""
+	Photo model
+	"""
 	owner = models.ForeignKey(User)
 	name = models.CharField(max_length=150)
 	url = models.URLField()
