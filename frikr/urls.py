@@ -23,11 +23,11 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
 
     # photo URLs
-    url(r'^$', photos.home, name='photos_home'),
-    url(r'^photos/(?P<id>[0-9]+)$', photos.detail, name='photo_detail'),
-    url(r'^photos/new$', photos.create, name='photo_create'),
+    url(r'^$', photos.HomeView.as_view(), name='photos_home'),
+    url(r'^photos/(?P<id>[0-9]+)$', photos.DetailView.as_view(), name='photo_detail'),
+    url(r'^photos/new$', photos.CreateView.as_view(), name='photo_create'),
 
     # users URLs
-    url(r'^login$', users.login, name='users_login'),
-    url(r'^logout$', users.logout, name='users_logout'),
+    url(r'^login$', users.LoginView.as_view(), name='users_login'),
+    url(r'^logout$', users.LogoutView.as_view(), name='users_logout'),
 ]
