@@ -13,6 +13,8 @@
         <a href="{% url 'photo_list' %}">Photos</a>
         |
         {% if user.is_authenticated %}
+            <a href="{% url 'user_photos' %}">My Photos</a>
+        |
             <a href="{% url 'photo_create' %}">Add Photo</a>
         |
             <a href="{% url 'users_logout' %}">Logout</a>

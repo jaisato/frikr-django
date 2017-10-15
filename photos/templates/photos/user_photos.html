@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block section %}
+    <h2>Mis Fotos</h2>
+
+    {% if user_photos|length > 0 %}
+    <ul>
+    {% include 'photos/photos_loop.html' with photos=user_photos %}
+    </ul>
+    {% else %}
+        <p>No photos available.</p>
+    {% endif %}
+{% endblock %}
