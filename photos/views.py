@@ -61,9 +61,12 @@ def create(request):
 	"""
 	success_message = ''
 	if request.method == 'POST':
-		form = PhotoForm(request.POST)
+		photo_with_owner = Photo()
+		photo_with_owner.owner = request.user
+		form = PhotoForm(request.POST, instance=photo_with_owner)
 		if form.is_valid():
 			photo = form.save() # genera el objeto del formulario, lo guarda en BD y lo devuelve
+
 			success_message = 'Guardado con éxito! '
 			success_message += '<a href="{0}"'.format(reverse('photo_detail', args=[photo.pk]))+'>'
 			success_message += 'Ver Foto'
