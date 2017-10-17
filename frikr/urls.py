@@ -18,6 +18,7 @@ from django.contrib import admin
 from photos import views as photos
 from users import views as users
 from django.contrib.auth.decorators import login_required
+from users.api import UserListAPI
 
 urlpatterns = [
     # admin URLs
@@ -33,4 +34,7 @@ urlpatterns = [
     # users URLs
     url(r'^login$', users.LoginView.as_view(), name='users_login'),
     url(r'^logout$', users.LogoutView.as_view(), name='users_logout'),
+
+    # User API urls
+    url(r'^api/1.0/users$', UserListAPI.as_view(), name='user_list_api'),
 ]
