@@ -1,26 +1,39 @@
 # -*- coding: utf-8 -*-
 from django.contrib.auth.models import User
-from django.http import HttpResponse
-from django.views.generic import View
-from rest_framework.renderers import JSONRenderer
-
+from rest_framework.generics import get_object_or_404
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from users.serializers import UserSerializer
 
 
-class UserListAPI(View):
+class UserListAPI(APIView):
 	"""
 	API view of User list
 	"""
 	def get(self, request):
 		"""
 		Get all users
-		:param request:
-		:return:
+		:param request: Http Request
+		:return: Response of users list
 		"""
 		users = User.objects.all()
 		serializer = UserSerializer(users, many=True)
-		serialized_users = serializer.data
-		renderer = JSONRenderer()
-		json_users = renderer.render(serialized_users)
 
-		return HttpResponse(json_users)
+		return Response(serializer.data)
+
+
+class UserDetailAPI(APIView):
+	"""
+	API view of user detail
+	"""
+	def get(self, request, id):
+		"""
+		Gets user detail
+		:param request: Http request
+		:param id: User id
+		:return: Response of user detail
+		"""
+		user = get_object_or_404(User, pk=id)
+		serializer = UserSerializer(user)
+
+		return Response(serializer.data)
