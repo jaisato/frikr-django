@@ -3,23 +3,30 @@ from django.contrib.auth.models import User
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from users.pagination import UserPageNumberPagination
 from users.serializers import UserSerializer
 from rest_framework import status
+
 
 class UserListAPI(APIView):
 	"""
 	API view of User list
 	"""
+
 	def get(self, request):
 		"""
 		Get all users
 		:param request: Http Request
 		:return: Response of users list
 		"""
-		users = User.objects.all()
+		users = User.objects.filter()
+		# pagination
+		paginator = UserPageNumberPagination()
+		paginator.paginate_queryset(users, request)
+
 		serializer = UserSerializer(users, many=True)
 
-		return Response(serializer.data)
+		return paginator.get_paginated_response(serializer.data)
 
 	def post(self, request):
 		"""
