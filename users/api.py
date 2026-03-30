@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from django.contrib.auth.models import User
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from users.pagination import UserPageNumberPagination
 from users.serializers import UserSerializer
 from rest_framework import status
@@ -13,8 +13,7 @@ class UserListAPI(APIView):
 	"""
 	API view of User list
 	"""
-
-	permission_classes = [IsAdminUser]
+	permission_classes = (IsAuthenticated,)
 
 	def get(self, request):
 		"""
@@ -49,8 +48,7 @@ class UserDetailAPI(APIView):
 	"""
 	API view of user detail
 	"""
-
-	permission_classes = [IsAdminUser]
+	permission_classes = (IsAdminUser,)
 
 	def get(self, request, id):
 		"""
