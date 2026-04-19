@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from users.pagination import UserPageNumberPagination
 from users.serializers import UserSerializer
 from rest_framework import status
@@ -12,6 +13,15 @@ class UserListAPI(APIView):
 	"""
 	API view of User list
 	"""
+
+	def get_permissions(self):
+		"""
+		Allow unauthenticated access for GET (list users),
+		require authentication for POST (create user).
+		"""
+		if self.request.method == 'GET':
+			return []
+		return [IsAuthenticated()]
 
 	def get(self, request):
 		"""
@@ -46,6 +56,16 @@ class UserDetailAPI(APIView):
 	"""
 	API view of user detail
 	"""
+
+	def get_permissions(self):
+		"""
+		Allow unauthenticated access for GET (view user detail),
+		require authentication for PUT and DELETE.
+		"""
+		if self.request.method == 'GET':
+			return []
+		return [IsAuthenticated()]
+
 	def get(self, request, id):
 		"""
 		Gets user detail
