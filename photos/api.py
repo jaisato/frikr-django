@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
-from models import Photo
+from .models import Photo
 from photos.serializers import PhotoSerializer, PhotoListSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from photos.views import PhotosQuerySet
