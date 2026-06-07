@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from users.pagination import UserPageNumberPagination
-from users.serializers import UserSerializer
+from users.serializers import UserSerializer, UserReadSerializer
 from rest_framework import status
 
 
@@ -26,7 +26,7 @@ class UserListAPI(APIView):
 		paginator = UserPageNumberPagination()
 		paginator.paginate_queryset(users, request)
 
-		serializer = UserSerializer(users, many=True)
+		serializer = UserReadSerializer(users, many=True)
 
 		return paginator.get_paginated_response(serializer.data)
 
@@ -39,7 +39,7 @@ class UserListAPI(APIView):
 		serializer = UserSerializer(data=request.data)
 		if serializer.is_valid():
 			user = serializer.save()
-			return Response(serializer.data, status=status.HTTP_201_CREATED)
+			return Response(UserReadSerializer(user).data, status=status.HTTP_201_CREATED)
 		else:
 			return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -58,7 +58,7 @@ class UserDetailAPI(APIView):
 		:return: Response of user detail
 		"""
 		user = get_object_or_404(User, pk=id)
-		serializer = UserSerializer(user)
+		serializer = UserReadSerializer(user)
 
 		return Response(serializer.data)
 
@@ -73,7 +73,7 @@ class UserDetailAPI(APIView):
 		serializer = UserSerializer(instance=user, data=request.data)
 		if serializer.is_valid():
 			serializer.save()
-			return Response(serializer.data, status=status.HTTP_200_OK)
+			return Response(UserReadSerializer(user).data, status=status.HTTP_200_OK)
 		else:
 			return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

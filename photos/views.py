@@ -93,20 +93,20 @@ class CreateView(View):
 		:return:
 		"""
 		success_message = ''
+		photo_url = ''
 		photo_with_owner = Photo()
 		photo_with_owner.owner = request.user
 		form = PhotoForm(request.POST, instance=photo_with_owner)
 
 		if form.is_valid():
-			photo = form.save() # genera el objeto del formulario, lo guarda en BD y lo devuelve
-			success_message = 'Guardado con éxito! '
-			success_message += '<a href="{0}"'.format(reverse('photo_detail', args=[photo.pk])) + '>'
-			success_message += 'Ver Foto'
-			success_message += '</a>'
+			photo = form.save()
+			success_message = True
+			photo_url = reverse('photo_detail', args=[photo.pk])
 
 		context = {
 			'form': form,
-			'success_message': success_message
+			'success_message': success_message,
+			'photo_url': photo_url,
 		}
 		return render(request, 'photos/new_photo.html', context)
 

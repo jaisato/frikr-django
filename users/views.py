@@ -34,7 +34,7 @@ class LoginView(View):
 			else:
 				if user.is_active:
 					dj_login(request, user)
-					# Validate redirect URL to prevent open redirect attacks
+					# Validate the 'next' parameter to prevent open redirect
 					next_url = request.GET.get('next', '')
 					if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
 						return redirect(next_url)

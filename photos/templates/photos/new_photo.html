@@ -8,9 +8,12 @@
     <h2>Nueva Foto</h2>
 
     {% if success_message %}
-    <span style="color: green;">
-        {{ success_message|safe }}
-    </span>
+    <div class="alert alert-success">
+        Guardado con &eacute;xito!
+        {% if photo_url %}
+        <a href="{{ photo_url }}">Ver Foto</a>
+        {% endif %}
+    </div>
     {% endif %}
 
     <form method="post" novalidate class="form-control" style="border: hidden">

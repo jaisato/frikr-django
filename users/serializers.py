@@ -3,6 +3,17 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 
 
+class UserReadSerializer(serializers.Serializer):
+	"""
+	User serializer for read operations - excludes password from responses
+	"""
+	id = serializers.ReadOnlyField()
+	first_name = serializers.CharField()
+	last_name = serializers.CharField()
+	username = serializers.CharField()
+	email = serializers.EmailField()
+
+
 class UserSerializer(serializers.Serializer):
 	"""
 	User serializer to create and update user instances from serialized data
@@ -12,7 +23,7 @@ class UserSerializer(serializers.Serializer):
 	last_name = serializers.CharField()
 	username = serializers.CharField()
 	email = serializers.EmailField()
-	password = serializers.CharField()
+	password = serializers.CharField(write_only=True)
 
 	def create(self, validated_data):
 		"""
