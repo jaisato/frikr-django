@@ -12,7 +12,8 @@ class UserSerializer(serializers.Serializer):
 	last_name = serializers.CharField()
 	username = serializers.CharField()
 	email = serializers.EmailField()
-	password = serializers.CharField()
+	# SECURITY FIX: Mark password as write_only so it is never returned in API responses
+	password = serializers.CharField(write_only=True)
 
 	def create(self, validated_data):
 		"""

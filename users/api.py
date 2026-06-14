@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from users.pagination import UserPageNumberPagination
 from users.serializers import UserSerializer
 from rest_framework import status
@@ -12,6 +13,8 @@ class UserListAPI(APIView):
 	"""
 	API view of User list
 	"""
+	# SECURITY FIX: Require authentication to list users
+	permission_classes = (IsAuthenticated,)
 
 	def get(self, request):
 		"""
@@ -46,6 +49,9 @@ class UserDetailAPI(APIView):
 	"""
 	API view of user detail
 	"""
+	# SECURITY FIX: Require authentication for user detail/update/delete
+	permission_classes = (IsAuthenticated,)
+
 	def get(self, request, id):
 		"""
 		Gets user detail
@@ -66,6 +72,10 @@ class UserDetailAPI(APIView):
 		:return:
 		"""
 		user = get_object_or_404(User, pk=id)
+		# SECURITY FIX: Only allow users to update themselves, or admins to update anyone
+		if request.user.pk != user.pk and not request.user.is_superuser:
+			return Response({'detail': 'You can only update your own profile.'},
+			                status=status.HTTP_403_FORBIDDEN)
 		serializer = UserSerializer(instance=user, data=request.data)
 		if serializer.is_valid():
 			serializer.save()
@@ -80,6 +90,10 @@ class UserDetailAPI(APIView):
 		:param id:
 		:return:
 		"""
+		# SECURITY FIX: Only admins can delete users
+		if not request.user.is_superuser:
+			return Response({'detail': 'Only administrators can delete users.'},
+			                status=status.HTTP_403_FORBIDDEN)
 		user = get_object_or_404(User, pk=id)
 		user.delete()
 
