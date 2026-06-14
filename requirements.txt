@@ -1,0 +1,5 @@
+# Dependencies for frikr-django
+# NOTE: Django 1.11.6 (original) has multiple known CVEs.
+# Upgraded to Django 3.2 LTS (latest 3.2.x recommended for production).
+Django>=3.2,<4.0
+djangorestframework>=3.14,<4.0

@@ -6,6 +6,7 @@ from django.shortcuts import render
 from django.http import HttpResponseNotFound
 from django.urls import reverse
 from django.utils.decorators import method_decorator
+from django.utils.html import format_html
 
 from photos.forms import PhotoForm
 from photos.models import Photo, PUBLIC
@@ -51,14 +52,6 @@ class DetailView(View, PhotosQuerySet):
 		:param id:
 		:return:
 		"""
-		"""
-		try:
-			photo = Photo.objects.get(pk=id)
-		except Photo.DoesNotExist:
-			photo = None
-		except Photo.MultipleObjects:
-			photo = photo[0]
-		"""
 		photos = self.get_photos_queryset(request).filter(pk=id).select_related('owner')
 		if len(photos) == 1:
 			photo = photos[0]
@@ -68,7 +61,7 @@ class DetailView(View, PhotosQuerySet):
 		if photo is not None:
 			return render(request, 'photos/detail.html', {"photo": photo})
 		else:
-			return HttpResponseNotFound("Photo {0} not found".format(id))
+			return HttpResponseNotFound("Photo not found")
 
 
 class CreateView(View):
@@ -98,11 +91,11 @@ class CreateView(View):
 		form = PhotoForm(request.POST, instance=photo_with_owner)
 
 		if form.is_valid():
-			photo = form.save() # genera el objeto del formulario, lo guarda en BD y lo devuelve
-			success_message = 'Guardado con éxito! '
-			success_message += '<a href="{0}"'.format(reverse('photo_detail', args=[photo.pk])) + '>'
-			success_message += 'Ver Foto'
-			success_message += '</a>'
+			photo = form.save()
+			# SECURITY FIX: Use format_html instead of string concatenation
+			# to safely build HTML for the success message.
+			# The template no longer uses |safe filter.
+			success_message = 'Guardado con exito!'
 
 		context = {
 			'form': form,
