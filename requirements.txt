@@ -1,0 +1,4 @@
+# NOTE: Django 1.11 is end-of-life (no security fixes since April 2020).
+# Upgrading to a supported Django LTS release is strongly recommended.
+Django==1.11.29
+djangorestframework==3.6.4
