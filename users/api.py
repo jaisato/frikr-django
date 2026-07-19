@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from users.pagination import UserPageNumberPagination
 from users.serializers import UserSerializer
 from rest_framework import status
@@ -12,6 +13,12 @@ class UserListAPI(APIView):
 	"""
 	API view of User list
 	"""
+
+	def get_permissions(self):
+		# Registration (POST) stays public; listing users requires authentication
+		if self.request.method == 'POST':
+			return (AllowAny(),)
+		return (IsAuthenticated(),)
 
 	def get(self, request):
 		"""
@@ -46,6 +53,8 @@ class UserDetailAPI(APIView):
 	"""
 	API view of user detail
 	"""
+	permission_classes = (IsAuthenticated,)
+
 	def get(self, request, id):
 		"""
 		Gets user detail
@@ -66,6 +75,8 @@ class UserDetailAPI(APIView):
 		:return:
 		"""
 		user = get_object_or_404(User, pk=id)
+		if not (request.user.is_superuser or request.user == user):
+			return Response(status=status.HTTP_403_FORBIDDEN)
 		serializer = UserSerializer(instance=user, data=request.data)
 		if serializer.is_valid():
 			serializer.save()
@@ -81,6 +92,8 @@ class UserDetailAPI(APIView):
 		:return:
 		"""
 		user = get_object_or_404(User, pk=id)
+		if not (request.user.is_superuser or request.user == user):
+			return Response(status=status.HTTP_403_FORBIDDEN)
 		user.delete()
 
 		return Response(status=status.HTTP_204_NO_CONTENT)
