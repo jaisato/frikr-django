@@ -21,12 +21,18 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '_*)@a(&k7thzg4aekyet8cewfjmx$z5vz$fnc&z!q)u+l-ptn7'
+# Read from the environment. The fallback exists only so `manage.py` keeps
+# working out of the box for local development; it must never be used to serve
+# real traffic. The key that used to sit here in plain text is in this
+# repository's history and has to be treated as compromised.
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'insecure-development-key-change-me')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('1', 'true', 'yes')
 
-ALLOWED_HOSTS = []
+# With DEBUG off Django requires this to be populated, so keep it in the
+# environment too: DJANGO_ALLOWED_HOSTS="example.com,www.example.com"
+ALLOWED_HOSTS = [h for h in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',') if h]
 
 
 # Application definition
