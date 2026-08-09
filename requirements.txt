@@ -4,5 +4,5 @@
 # no security fixes; porting to Python 3 + a supported Django is the real fix.
 # Until then, these are the versions the code was written against, pinned so a
 # checkout is at least reproducible.
-Django==1.11.29
+Django==5.2.16
 djangorestframework==3.9.4
