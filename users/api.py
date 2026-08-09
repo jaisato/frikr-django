@@ -4,6 +4,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from users.pagination import UserPageNumberPagination
+from users.permissions import IsSelfOrStaff, IsStaffOrCreateOnly
 from users.serializers import UserSerializer
 from rest_framework import status
 
@@ -12,6 +13,7 @@ class UserListAPI(APIView):
 	"""
 	API view of User list
 	"""
+	permission_classes = (IsStaffOrCreateOnly,)
 
 	def get(self, request):
 		"""
@@ -46,6 +48,7 @@ class UserDetailAPI(APIView):
 	"""
 	API view of user detail
 	"""
+	permission_classes = (IsSelfOrStaff,)
 	def get(self, request, id):
 		"""
 		Gets user detail
@@ -54,6 +57,7 @@ class UserDetailAPI(APIView):
 		:return: Response of user detail
 		"""
 		user = get_object_or_404(User, pk=id)
+		self.check_object_permissions(request, user)
 		serializer = UserSerializer(user)
 
 		return Response(serializer.data)
@@ -66,6 +70,7 @@ class UserDetailAPI(APIView):
 		:return:
 		"""
 		user = get_object_or_404(User, pk=id)
+		self.check_object_permissions(request, user)
 		serializer = UserSerializer(instance=user, data=request.data)
 		if serializer.is_valid():
 			serializer.save()
@@ -81,6 +86,7 @@ class UserDetailAPI(APIView):
 		:return:
 		"""
 		user = get_object_or_404(User, pk=id)
+		self.check_object_permissions(request, user)
 		user.delete()
 
 		return Response(status=status.HTTP_204_NO_CONTENT)

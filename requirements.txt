@@ -1,0 +1,8 @@
+# Django 1.11 is the last release that runs on Python 2.7, which this codebase
+# still targets (implicit relative imports, `request.user.is_anonymous()`,
+# `__unicode__`). Both Python 2.7 and Django 1.11 are end-of-life and receive
+# no security fixes; porting to Python 3 + a supported Django is the real fix.
+# Until then, these are the versions the code was written against, pinned so a
+# checkout is at least reproducible.
+Django==1.11.29
+djangorestframework==3.9.4

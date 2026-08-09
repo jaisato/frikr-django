@@ -12,7 +12,9 @@ class UserSerializer(serializers.Serializer):
 	last_name = serializers.CharField()
 	username = serializers.CharField()
 	email = serializers.EmailField()
-	password = serializers.CharField()
+	# write_only: the field mirrors User.password, so serialising it handed
+	# out the stored hash on every read.
+	password = serializers.CharField(write_only=True)
 
 	def create(self, validated_data):
 		"""
