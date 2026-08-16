@@ -50,7 +50,7 @@ class UserSerializer(serializers.Serializer):
 
 		return instance
 
-	def validate_password(self, data):
+	def validate(self, attrs):
 		"""
 		Runs the project's AUTH_PASSWORD_VALIDATORS.
 
@@ -60,24 +60,48 @@ class UserSerializer(serializers.Serializer):
 		set_password() directly, so none of them ever ran and the API accepted
 		"1" as a password - the configuration looked like protection that was
 		not actually in place anywhere a user could reach.
+
+		This is an object-level validator rather than validate_password() on
+		purpose. UserAttributeSimilarityValidator compares the password against
+		the user's own username, e-mail and name; a field-level validator only
+		receives its own field, so it had to read those from self.instance -
+		the values as they are *before* the update. A PUT that changed the
+		username and the password together was therefore checked against the
+		old username and then saved both, so submitting the same value for
+		username and password passed a rule that exists to reject exactly that.
+
+		By the time validate() runs, every field has been collected, so the
+		comparison uses the values that are actually about to be written.
 		"""
-		# UserAttributeSimilarityValidator compares the password against the
-		# user's username and e-mail, so it needs the instance to do its job.
-		user = self.instance if self.instance else User(
-			username=self.initial_data.get('username', ''),
-			email=self.initial_data.get('email', ''),
-			first_name=self.initial_data.get('first_name', ''),
-			last_name=self.initial_data.get('last_name', ''),
+		password = attrs.get('password')
+
+		if password is None:
+			return attrs
+
+		# What the user will look like once this request is applied: the
+		# submitted values, falling back to what the instance already holds for
+		# anything the request did not send.
+		def field(name):
+			if name in attrs:
+				return attrs[name]
+			return getattr(self.instance, name, '') if self.instance else ''
+
+		prospective = User(
+			username=field('username'),
+			email=field('email'),
+			first_name=field('first_name'),
+			last_name=field('last_name'),
 		)
 
 		try:
-			validate_password(data, user)
+			validate_password(password, prospective)
 		except DjangoValidationError as e:
 			# Django and DRF each have their own ValidationError; the one DRF
-			# turns into a 400 is its own.
-			raise serializers.ValidationError(list(e.messages))
+			# turns into a 400 is its own. Keying it to `password` puts the
+			# messages on the field they belong to.
+			raise serializers.ValidationError({'password': list(e.messages)})
 
-		return data
+		return attrs
 
 	def validate_username(self, data):
 		users = User.objects.filter(username=data)
