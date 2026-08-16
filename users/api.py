@@ -21,12 +21,16 @@ class UserListAPI(APIView):
 		:param request: Http Request
 		:return: Response of users list
 		"""
-		users = User.objects.filter()
+		users = User.objects.all().order_by('pk')
 		# pagination
 		paginator = UserPageNumberPagination()
-		paginator.paginate_queryset(users, request)
+		# The return value of paginate_queryset() *is* the page. It was being
+		# discarded and the full queryset serialised instead, so every page of
+		# the response contained every user in the database - the paging
+		# metadata said "page 2 of 7" while the body held all seven pages.
+		page = paginator.paginate_queryset(users, request)
 
-		serializer = UserSerializer(users, many=True)
+		serializer = UserSerializer(page, many=True)
 
 		return paginator.get_paginated_response(serializer.data)
 
