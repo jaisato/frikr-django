@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from django.contrib.auth.models import User
 from django.test import TestCase
+from django.urls import reverse
 from django.utils.crypto import get_random_string
 
 from users.serializers import UserSerializer
@@ -127,3 +128,47 @@ class UserSerializerUpdateTestCase(TestCase):
 		self.assertEqual(user.email, 'ana@example.com')
 		self.assertTrue(user.has_usable_password())
 		self.assertTrue(user.check_password(password))
+
+
+class LoginRedirectTestCase(TestCase):
+	"""
+	`?next=` used to be handed straight to redirect(), so
+	https://this-site/login/?next=https://evil.example/ sent a user who had
+	just logged in on the real domain - which is exactly what makes the trick
+	work - onto an attacker-controlled page they now trust.
+	"""
+
+	def setUp(self):
+		self.password = valid_password()
+		self.user = User.objects.create(username='anaruiz', email='ana@example.com')
+		self.user.set_password(self.password)
+		self.user.save()
+
+	def login(self, next_param):
+		return self.client.post(
+			reverse('users_login') + '?next=' + next_param,
+			{'usr': 'anaruiz', 'pwd': self.password},
+		)
+
+	def test_refuses_to_redirect_to_another_host(self):
+		response = self.login('https://evil.example/')
+
+		self.assertEqual(response.status_code, 302)
+		self.assertNotIn('evil.example', response['Location'])
+
+	def test_refuses_a_protocol_relative_url(self):
+		"""
+		//evil.example has no scheme, so it reads like a path and slips past a
+		naive "does it start with http" check, but a browser treats it as an
+		absolute URL to another host.
+		"""
+		response = self.login('//evil.example/')
+
+		self.assertEqual(response.status_code, 302)
+		self.assertNotIn('evil.example', response['Location'])
+
+	def test_still_honours_a_local_next(self):
+		response = self.login('/photos/1')
+
+		self.assertEqual(response.status_code, 302)
+		self.assertEqual(response['Location'], '/photos/1')
