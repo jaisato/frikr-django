@@ -92,21 +92,25 @@ class CreateView(View):
 		:param request:
 		:return:
 		"""
-		success_message = ''
+		saved_photo_url = None
 		photo_with_owner = Photo()
 		photo_with_owner.owner = request.user
 		form = PhotoForm(request.POST, instance=photo_with_owner)
 
 		if form.is_valid():
 			photo = form.save() # genera el objeto del formulario, lo guarda en BD y lo devuelve
-			success_message = 'Guardado con éxito! '
-			success_message += '<a href="{0}"'.format(reverse('photo_detail', args=[photo.pk])) + '>'
-			success_message += 'Ver Foto'
-			success_message += '</a>'
+			# The view used to assemble the <a> tag itself and the template
+			# rendered it through |safe, which switches autoescaping off for
+			# whatever the string happens to contain. Nothing user-supplied was
+			# in it today, but adding the photo's own name to that message -
+			# the obvious next edit - would have been stored XSS. The view now
+			# passes the URL and the template builds the link, so escaping stays
+			# on.
+			saved_photo_url = reverse('photo_detail', args=[photo.pk])
 
 		context = {
 			'form': form,
-			'success_message': success_message
+			'saved_photo_url': saved_photo_url
 		}
 		return render(request, 'photos/new_photo.html', context)
 
