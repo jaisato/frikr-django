@@ -5,4 +5,4 @@
 # Until then, these are the versions the code was written against, pinned so a
 # checkout is at least reproducible.
 Django==1.11.29
-djangorestframework==3.9.4
+djangorestframework==3.17.2
