@@ -169,4 +169,14 @@ PROJECT_BADWORDS = [
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
+    # DRF's own default is AllowAny, so an API view that does not name a
+    # permission class is world-writable. That is exactly how the unauthenticated
+    # account takeover on the user endpoints happened: nobody wrote a permission
+    # down, so there was not one. The four views here each set their own class
+    # and are unaffected by this line - it only decides what a *new* view gets
+    # when its author forgets, and "readable by anyone, writable by someone
+    # logged in" is a far better answer to that than "open".
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ),
 }
