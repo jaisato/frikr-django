@@ -19,7 +19,7 @@ class Photo(models.Model):
 	"""
 	Photo model
 	"""
-	owner = models.ForeignKey(User)
+	owner = models.ForeignKey(User, on_delete=models.CASCADE)
 	name = models.CharField(max_length=150)
 	url = models.URLField()
 	description = models.TextField(blank=True, null=True, default="", validators=[badwords_detector])
@@ -28,5 +28,5 @@ class Photo(models.Model):
 	license = models.CharField(max_length=3, choices=LICENSES)
 	visibility = models.CharField(max_length=3, choices=VISIBILITY, default=PUBLIC)
 
-	def __unicode__(self):
+	def __str__(self):
 		return self.name
