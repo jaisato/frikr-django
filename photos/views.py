@@ -16,7 +16,7 @@ from django.db.models import Q
 class PhotosQuerySet(object):
 
 	def get_photos_queryset(self, request):
-		if request.user.is_anonymous():
+		if request.user.is_anonymous:
 			photos = Photo.objects.filter(visibility=PUBLIC)
 		elif request.user.is_superuser:
 			photos = Photo.objects.all()

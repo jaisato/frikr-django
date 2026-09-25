@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from django.shortcuts import render, redirect
 from django.contrib.auth import logout as dj_logout, authenticate, login as dj_login
 from users.forms import LoginForm
-from django.utils.http import is_safe_url
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.generic import View
 
 
@@ -58,16 +58,17 @@ class LoginView(View):
 		trusting it. The usual follow-up is a lookalike asking them to sign in
 		"again".
 
-		is_safe_url() is what Django's own LoginView uses for this: it rejects
-		absolute URLs pointing anywhere but this host, and require_https stops
-		an https session being bounced down to http.
+		url_has_allowed_host_and_scheme() is what Django's own LoginView uses
+		for this (it was called is_safe_url() until Django 3.0; the old name was
+		removed in 4.0): it rejects absolute URLs pointing anywhere but this host,
+		and require_https stops an https session being bounced down to http.
 
 		Falls back to the 'photos_home' view name, which is what redirect()
 		received before whenever `next` was absent.
 		"""
 		next_url = request.GET.get('next')
 
-		if next_url and is_safe_url(
+		if next_url and url_has_allowed_host_and_scheme(
 			url=next_url,
 			allowed_hosts={request.get_host()},
 			require_https=request.is_secure(),
@@ -80,7 +81,7 @@ class LoginView(View):
 class LogoutView(View):
 	def get(self, request):
 
-		if request.user.is_authenticated():
+		if request.user.is_authenticated:
 			dj_logout(request)
 
 		return redirect('photos_home')

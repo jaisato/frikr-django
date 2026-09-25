@@ -91,6 +91,11 @@ DATABASES = {
     }
 }
 
+# The existing tables were created with 32-bit AutoField keys. Django 3.2+
+# warns when this is unset, and switching to BigAutoField would generate
+# migrations that rewrite every primary key; keep what the schema already has.
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
@@ -119,8 +124,6 @@ LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
-
-USE_L10N = True
 
 USE_TZ = True
 
