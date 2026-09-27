@@ -79,7 +79,14 @@ class LoginView(View):
 
 
 class LogoutView(View):
-	def get(self, request):
+	"""
+	POST only. A GET logout can be triggered cross-site by any <img src> or
+	link, so a third-party page could sign users out at will (logout CSRF).
+	Django's own LogoutView dropped GET in 5.0 for the same reason; a POST
+	goes through CsrfViewMiddleware.
+	"""
+
+	def post(self, request):
 
 		if request.user.is_authenticated:
 			dj_logout(request)
