@@ -30,10 +30,19 @@ class IsSelfOrStaff(permissions.BasePermission):
 		return is_authenticated(request.user)
 
 	def has_object_permission(self, request, view, obj):
-		if request.user.is_staff:
+		if obj.pk == request.user.pk or request.user.is_superuser:
 			return True
 
-		return obj.pk == request.user.pk
+		if not request.user.is_staff:
+			return False
+
+		if request.method in permissions.SAFE_METHODS:
+			return True
+
+		# A staff member may manage ordinary accounts, but not other staff or
+		# superusers: PUT sets the password, so allowing it let any staff user
+		# take over a superuser account and escalate to full privileges.
+		return not (obj.is_staff or obj.is_superuser)
 
 
 class IsStaffOrCreateOnly(permissions.BasePermission):
