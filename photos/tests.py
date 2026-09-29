@@ -34,4 +34,8 @@ class PagesAndApiRespondTest(TestCase):
 		self.assertEqual(response.status_code, 201)
 		self.assertEqual(Photo.objects.get(name='p2').owner, self.user)
 
-		self.assertRedirects(self.client.get('/logout'), '/')
+		# Logging out is POST-only (logout CSRF); a GET must not end the session.
+		self.assertEqual(self.client.get('/logout').status_code, 405)
+		self.assertEqual(self.client.get('/my-photos').status_code, 200)
+		self.assertRedirects(self.client.post('/logout'), '/')
+		self.assertEqual(self.client.get('/my-photos').status_code, 302)
