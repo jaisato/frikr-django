@@ -16,7 +16,12 @@
         {% if user.is_authenticated %}
             <li role="presentation"><a href="{% url 'user_photos' %}">My Photos</a></li>
             <li role="presentation"><a href="{% url 'photo_create' %}">Add Photo</a></li>
-            <li role="presentation"><a href="{% url 'users_logout' %}">Logout</a></li>
+            <li role="presentation">
+                <form method="post" action="{% url 'users_logout' %}" style="display: inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-link">Logout</button>
+                </form>
+            </li>
         {% else %}
             <li role="presentation"><a href="{% url 'users_login' %}">Login</a></li>
         {% endif %}

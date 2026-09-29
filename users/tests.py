@@ -172,3 +172,35 @@ class LoginRedirectTestCase(TestCase):
 
 		self.assertEqual(response.status_code, 302)
 		self.assertEqual(response['Location'], '/photos/1')
+
+
+class StaffCannotTakeOverPrivilegedAccountsTestCase(TestCase):
+	"""
+	PUT on /api/1.0/users/<id> sets the password. Staff used to pass the object
+	permission for *any* account, so a staff user could reset a superuser's
+	password and log in as them.
+	"""
+
+	def setUp(self):
+		self.staff_password = valid_password()
+		self.staff = User.objects.create_user('staffer', 'staff@example.com', self.staff_password, is_staff=True)
+		self.root = User.objects.create_superuser('root', 'root@example.com', valid_password())
+		self.plain = User.objects.create_user('plain', 'plain@example.com', valid_password())
+		self.client.login(username='staffer', password=self.staff_password)
+
+	def payload(self, username):
+		return {
+			'first_name': 'X', 'last_name': 'Y', 'username': username,
+			'email': username + '@example.com', 'password': valid_password(),
+		}
+
+	def test_staff_cannot_modify_or_delete_a_superuser(self):
+		url = reverse('user_detail_api', args=[self.root.pk])
+		self.assertEqual(self.client.put(url, self.payload('root'), content_type='application/json').status_code, 403)
+		self.assertEqual(self.client.delete(url).status_code, 403)
+		self.assertTrue(User.objects.filter(pk=self.root.pk).exists())
+
+	def test_staff_can_still_read_and_manage_ordinary_accounts(self):
+		self.assertEqual(self.client.get(reverse('user_detail_api', args=[self.root.pk])).status_code, 200)
+		url = reverse('user_detail_api', args=[self.plain.pk])
+		self.assertEqual(self.client.put(url, self.payload('plain'), content_type='application/json').status_code, 200)
