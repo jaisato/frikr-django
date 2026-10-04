@@ -204,3 +204,42 @@ class StaffCannotTakeOverPrivilegedAccountsTestCase(TestCase):
 		self.assertEqual(self.client.get(reverse('user_detail_api', args=[self.root.pk])).status_code, 200)
 		url = reverse('user_detail_api', args=[self.plain.pk])
 		self.assertEqual(self.client.put(url, self.payload('plain'), content_type='application/json').status_code, 200)
+
+
+class UserSerializerFieldRulesTestCase(TestCase):
+	"""
+	UserSerializer is a plain Serializer, so it does not inherit the model's
+	field rules. The API took usernames Django's own tooling rejects and
+	values longer than the database columns.
+	"""
+
+	def data(self, **overrides):
+		data = {
+			'first_name': 'Ana',
+			'last_name': 'Ruiz',
+			'username': 'anaruiz',
+			'email': 'ana@example.com',
+			'password': valid_password(),
+		}
+		data.update(overrides)
+		return data
+
+	def test_rejects_characters_outside_djangos_username_rules(self):
+		for username in ['ana ruiz', '<script>', 'ana/ruiz']:
+			serializer = UserSerializer(data=self.data(username=username))
+			self.assertFalse(serializer.is_valid(), username)
+			self.assertIn('username', serializer.errors)
+
+	def test_rejects_values_longer_than_the_columns(self):
+		for field in ('username', 'first_name', 'last_name'):
+			serializer = UserSerializer(data=self.data(**{field: 'a' * 151}))
+			self.assertFalse(serializer.is_valid(), field)
+			self.assertIn(field, serializer.errors)
+
+		serializer = UserSerializer(data=self.data(email='a' * 250 + '@example.com'))
+		self.assertFalse(serializer.is_valid())
+		self.assertIn('email', serializer.errors)
+
+	def test_accepts_the_characters_django_allows(self):
+		serializer = UserSerializer(data=self.data(username='ana.ruiz+test@x_y-z'))
+		self.assertTrue(serializer.is_valid(), serializer.errors)
