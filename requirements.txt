@@ -1,6 +1,6 @@
 # Python 3.10+ (Django 5.2 LTS requires it; 3.12 recommended).
 # Django 5.2 is the current LTS line, supported until April 2028, and
-# djangorestframework 3.17 supports it. Both pins close the advisories that
+# djangorestframework 3.18 supports it. Both pins close the advisories that
 # Dependabot reported against Django 1.11 and DRF 3.9, which receive no fixes.
 Django==5.2.17
-djangorestframework==3.17.2
+djangorestframework==3.18.1

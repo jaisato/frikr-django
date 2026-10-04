@@ -4,7 +4,7 @@ Frikr (like Flickr for frikis). Another Django project
 ## Security notes
 
 This project runs on Python 3.10+ with Django 5.2 LTS (supported until April
-2028) and Django REST framework 3.17. Keep both on their latest patch releases.
+2028) and Django REST framework 3.18. Keep both on their latest patch releases.
 
 Two things need action from you regardless:
 
