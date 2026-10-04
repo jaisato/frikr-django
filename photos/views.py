@@ -23,7 +23,11 @@ class PhotosQuerySet(object):
 		else:
 			photos = Photo.objects.filter(Q(owner=request.user) | Q(visibility=PUBLIC))
 
-		return photos
+		# An explicit order: the API paginates this queryset, and paging an
+		# unordered one lets the database return rows in any order per query,
+		# so a photo could show up on two pages or on none (Django warns with
+		# UnorderedObjectListWarning). pk breaks ties between equal timestamps.
+		return photos.order_by('-created_at', '-pk')
 
 
 class HomeView(View):
