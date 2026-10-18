@@ -25,10 +25,20 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # working out of the box for local development; it must never be used to serve
 # real traffic. The key that used to sit here in plain text is in this
 # repository's history and has to be treated as compromised.
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'insecure-development-key-change-me')
+INSECURE_DEVELOPMENT_SECRET_KEY = 'insecure-development-key-change-me'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY') or INSECURE_DEVELOPMENT_SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('1', 'true', 'yes')
+
+# Turning DEBUG off is what marks a deployment, and the fallback key is public:
+# anyone can sign session cookies and password-reset tokens with it. Refuse to
+# start rather than serve real traffic with it because DJANGO_SECRET_KEY was
+# forgotten (or left empty).
+if not DEBUG and SECRET_KEY == INSECURE_DEVELOPMENT_SECRET_KEY:
+    from django.core.exceptions import ImproperlyConfigured
+
+    raise ImproperlyConfigured('DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is off.')
 
 # With DEBUG off Django requires this to be populated, so keep it in the
 # environment too: DJANGO_ALLOWED_HOSTS="example.com,www.example.com"
