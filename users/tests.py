@@ -204,3 +204,34 @@ class StaffCannotTakeOverPrivilegedAccountsTestCase(TestCase):
 		self.assertEqual(self.client.get(reverse('user_detail_api', args=[self.root.pk])).status_code, 200)
 		url = reverse('user_detail_api', args=[self.plain.pk])
 		self.assertEqual(self.client.put(url, self.payload('plain'), content_type='application/json').status_code, 200)
+
+
+class UserSerializerFieldLimitsTestCase(TestCase):
+	"""
+	The serializer is a plain Serializer, so it does not inherit the User
+	model's limits; it has to declare them or the database is the first thing
+	to notice (a 500 on PostgreSQL/MySQL).
+	"""
+
+	def data(self, **overrides):
+		data = {
+			'first_name': 'Ana', 'last_name': 'Ruiz', 'username': 'anaruiz',
+			'email': 'ana@example.com', 'password': valid_password(),
+		}
+		data.update(overrides)
+		return data
+
+	def test_rejects_values_longer_than_the_user_columns(self):
+		for field in ('first_name', 'last_name', 'username'):
+			serializer = UserSerializer(data=self.data(**{field: 'a' * 151}))
+			self.assertFalse(serializer.is_valid(), field)
+			self.assertIn(field, serializer.errors)
+
+	def test_rejects_usernames_django_itself_would_reject(self):
+		serializer = UserSerializer(data=self.data(username='ana <b>ruiz</b>'))
+		self.assertFalse(serializer.is_valid())
+		self.assertIn('username', serializer.errors)
+
+	def test_accepts_the_usual_username_characters(self):
+		serializer = UserSerializer(data=self.data(username='ana.ruiz+test@home_1-x'))
+		self.assertTrue(serializer.is_valid(), serializer.errors)
