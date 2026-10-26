@@ -23,7 +23,12 @@ class PhotosQuerySet(object):
 		else:
 			photos = Photo.objects.filter(Q(owner=request.user) | Q(visibility=PUBLIC))
 
-		return photos
+		# A stable order is what makes PhotoListAPI's page numbers mean
+		# anything: without it the database may return rows in a different
+		# order on each query, so a photo can appear on two pages or on none
+		# (DRF warns with UnorderedObjectListWarning). Newest first, with the
+		# primary key breaking ties between photos saved in the same instant.
+		return photos.order_by('-created_at', '-pk')
 
 
 class HomeView(View):

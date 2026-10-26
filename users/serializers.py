@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
@@ -10,10 +11,15 @@ class UserSerializer(serializers.Serializer):
 	User serializer to create and update user instances from serialized data
 	"""
 	id = serializers.ReadOnlyField() # identifier read only
-	first_name = serializers.CharField()
-	last_name = serializers.CharField()
-	username = serializers.CharField()
-	email = serializers.EmailField()
+	# The limits and the username validator mirror django.contrib.auth's
+	# User model. This plain Serializer does not inherit them, so a 300-char
+	# name reached the database (a DataError and a 500 on PostgreSQL/MySQL;
+	# silently stored on SQLite) and usernames with spaces or markup were
+	# accepted even though the admin and Django's own forms reject them.
+	first_name = serializers.CharField(max_length=150)
+	last_name = serializers.CharField(max_length=150)
+	username = serializers.CharField(max_length=150, validators=[UnicodeUsernameValidator()])
+	email = serializers.EmailField(max_length=254)
 	# write_only: the field mirrors User.password, so serialising it handed
 	# out the stored hash on every read.
 	password = serializers.CharField(write_only=True)

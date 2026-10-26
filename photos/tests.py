@@ -39,3 +39,24 @@ class PagesAndApiRespondTest(TestCase):
 		self.assertEqual(self.client.get('/my-photos').status_code, 200)
 		self.assertRedirects(self.client.post('/logout'), '/')
 		self.assertEqual(self.client.get('/my-photos').status_code, 302)
+
+
+class PhotoListApiOrderTest(TestCase):
+	"""
+	PhotoListAPI paginates, and pagination over an unordered queryset lets the
+	database return rows in any order per query, so a photo could show up on
+	two pages or on none.
+	"""
+
+	def test_pages_are_newest_first_and_do_not_overlap(self):
+		owner = User.objects.create_user('bea', 'bea@example.com', 'S3gura-Clave-123')
+		for i in range(12):
+			Photo.objects.create(owner=owner, name='p%d' % i, url='http://example.com/%d.jpg' % i,
+				license='CC', visibility=PUBLIC)
+
+		first = self.client.get('/api/1.0/photos').json()['results']
+		second = self.client.get('/api/1.0/photos?page=2').json()['results']
+		ids = [p['id'] for p in first + second]
+
+		self.assertEqual(len(ids), 12)
+		self.assertEqual(ids, sorted(ids, reverse=True))
