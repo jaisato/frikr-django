@@ -110,10 +110,18 @@ class UserSerializer(serializers.Serializer):
 		return attrs
 
 	def validate_username(self, data):
-		users = User.objects.filter(username=data)
-		if not self.instance and len(users) != 0:
+		"""
+		A username may not differ from an existing one only in case.
+
+		The check used to be an exact match, so with "admin" registered anyone
+		could sign up as "Admin" and pass for that account wherever names are
+		shown. Django's own UserCreationForm has rejected such names since 4.2;
+		the API now applies the same rule, leaving out the account being updated
+		so a user can still change the case of their own name.
+		"""
+		users = User.objects.filter(username__iexact=data)
+		if self.instance is not None:
+			users = users.exclude(pk=self.instance.pk)
+		if users.exists():
 			raise serializers.ValidationError("Ya existe un usuario con este username")
-		elif self.instance and self.instance.username != data and len(users) != 0:
-			raise serializers.ValidationError("Ya existe un usuario con este username")
-		else:
-			return data
+		return data

@@ -235,3 +235,40 @@ class UserSerializerFieldLimitsTestCase(TestCase):
 	def test_accepts_the_usual_username_characters(self):
 		serializer = UserSerializer(data=self.data(username='ana.ruiz+test@home_1-x'))
 		self.assertTrue(serializer.is_valid(), serializer.errors)
+
+
+class UsernameUniquenessTestCase(TestCase):
+	"""
+	Usernames that differ only in case let a newcomer pass for an existing
+	account ("Admin" next to "admin"); Django's UserCreationForm rejects them.
+	"""
+
+	def data(self, username):
+		return {
+			'first_name': 'Ana', 'last_name': 'Ruiz', 'username': username,
+			'email': 'ana@example.com', 'password': valid_password(),
+		}
+
+	def test_rejects_a_username_that_only_differs_in_case(self):
+		User.objects.create_user('admin', 'admin@example.com', valid_password())
+
+		serializer = UserSerializer(data=self.data('Admin'))
+
+		self.assertFalse(serializer.is_valid())
+		self.assertIn('username', serializer.errors)
+
+	def test_rejects_renaming_onto_another_account_in_a_different_case(self):
+		User.objects.create_user('admin', 'admin@example.com', valid_password())
+		user = User.objects.create_user('anaruiz', 'ana@example.com', valid_password())
+
+		serializer = UserSerializer(instance=user, data=self.data('ADMIN'))
+
+		self.assertFalse(serializer.is_valid())
+		self.assertIn('username', serializer.errors)
+
+	def test_lets_a_user_change_the_case_of_their_own_username(self):
+		user = User.objects.create_user('anaruiz', 'ana@example.com', valid_password())
+
+		serializer = UserSerializer(instance=user, data=self.data('AnaRuiz'))
+
+		self.assertTrue(serializer.is_valid(), serializer.errors)

@@ -50,3 +50,49 @@ class SecretKeyFallbackTestCase(SimpleTestCase):
 
 		self.assertEqual(result.returncode, 0, result.stderr)
 		self.assertEqual(result.stdout.strip(), 'insecure-development-key-change-me')
+
+
+class DeploymentHardeningTestCase(SimpleTestCase):
+	"""
+	With DEBUG off the session and CSRF cookies must carry the Secure flag
+	unless the deployment explicitly says it serves plain http.
+	"""
+
+	PRINT_FLAGS = (
+		'import frikr.settings as s; '
+		'print(getattr(s, "SESSION_COOKIE_SECURE", False), getattr(s, "CSRF_COOKIE_SECURE", False), '
+		'getattr(s, "SECURE_PROXY_SSL_HEADER", None) is not None)'
+	)
+
+	def flags(self, **env):
+		environment = {
+			key: value for key, value in os.environ.items()
+			if not key.startswith('DJANGO_')
+		}
+		environment.update(env)
+		result = subprocess.run(
+			[sys.executable, '-c', self.PRINT_FLAGS],
+			cwd=settings.BASE_DIR, env=environment, capture_output=True, text=True,
+		)
+		self.assertEqual(result.returncode, 0, result.stderr)
+		return result.stdout.split()
+
+	def test_secure_cookies_by_default_with_debug_off(self):
+		flags = self.flags(DJANGO_DEBUG='false', DJANGO_SECRET_KEY='a-real-key')
+
+		self.assertEqual(flags, ['True', 'True', 'False'])
+
+	def test_secure_cookies_can_be_switched_off_explicitly(self):
+		flags = self.flags(DJANGO_DEBUG='false', DJANGO_SECRET_KEY='a-real-key', DJANGO_SECURE_COOKIES='false')
+
+		self.assertEqual(flags[:2], ['False', 'False'])
+
+	def test_trusts_x_forwarded_proto_only_when_asked(self):
+		flags = self.flags(DJANGO_DEBUG='false', DJANGO_SECRET_KEY='a-real-key', DJANGO_TRUST_X_FORWARDED_PROTO='true')
+
+		self.assertEqual(flags[2], 'True')
+
+	def test_local_development_keeps_plain_cookies(self):
+		flags = self.flags()
+
+		self.assertEqual(flags[:2], ['False', 'False'])
