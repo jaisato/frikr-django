@@ -119,6 +119,12 @@ class UserSerializer(serializers.Serializer):
 		the API now applies the same rule, leaving out the account being updated
 		so a user can still change the case of their own name.
 		"""
+		if self.instance is not None and self.instance.username == data:
+			# An unchanged name is never rejected. The database index is
+			# case-sensitive, so "admin" and "Admin" may both exist already;
+			# without this both accounts would fail every update of their own
+			# profile, because the view always sends the full object.
+			return data
 		users = User.objects.filter(username__iexact=data)
 		if self.instance is not None:
 			users = users.exclude(pk=self.instance.pk)

@@ -272,3 +272,25 @@ class UsernameUniquenessTestCase(TestCase):
 		serializer = UserSerializer(instance=user, data=self.data('AnaRuiz'))
 
 		self.assertTrue(serializer.is_valid(), serializer.errors)
+
+	def test_an_account_with_a_pre_existing_case_duplicate_can_still_update_itself(self):
+		# The database index is case-sensitive, so both rows may already exist.
+		# The view always sends the full object, unchanged username included.
+		User.objects.create_user('admin', 'admin@example.com', valid_password())
+		user = User.objects.create_user('Admin', 'other@example.com', valid_password())
+
+		serializer = UserSerializer(instance=user, data=self.data('Admin'))
+
+		self.assertTrue(serializer.is_valid(), serializer.errors)
+
+	def test_put_on_the_own_profile_succeeds_despite_a_case_duplicate(self):
+		User.objects.create_user('admin', 'admin@example.com', valid_password())
+		password = valid_password()
+		user = User.objects.create_user('Admin', 'other@example.com', password)
+		self.client.login(username='Admin', password=password)
+
+		response = self.client.put(
+			reverse('user_detail_api', args=[user.pk]), self.data('Admin'), content_type='application/json',
+		)
+
+		self.assertEqual(response.status_code, 200, response.content)
