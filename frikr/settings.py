@@ -45,6 +45,33 @@ if not DEBUG and SECRET_KEY == INSECURE_DEVELOPMENT_SECRET_KEY:
 ALLOWED_HOSTS = [h for h in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',') if h]
 
 
+def env_flag(name, default):
+    """Reads a boolean from the environment, with the same spellings as DJANGO_DEBUG."""
+    value = os.environ.get(name)
+    if value is None or value == '':
+        return default
+    return value.lower() in ('1', 'true', 'yes')
+
+
+# With DEBUG off the session and CSRF cookies went out without the Secure flag,
+# so the first plain-http request (a typed URL, an old bookmark) leaked the
+# session id in clear text; `manage.py check --deploy` flagged both. A
+# deployment is expected to serve HTTPS: the flags are on by default and
+# DJANGO_SECURE_COOKIES=false switches them off for an http-only setup.
+# Redirecting to HTTPS and HSTS depend on how TLS is terminated, so they stay
+# opt-in from the environment.
+if not DEBUG:
+    SESSION_COOKIE_SECURE = env_flag('DJANGO_SECURE_COOKIES', True)
+    CSRF_COOKIE_SECURE = SESSION_COOKIE_SECURE
+    SECURE_SSL_REDIRECT = env_flag('DJANGO_SECURE_SSL_REDIRECT', False)
+    SECURE_HSTS_SECONDS = int(os.environ.get('DJANGO_SECURE_HSTS_SECONDS', '0') or 0)
+    # Behind a proxy that terminates TLS, request.is_secure() is only right if
+    # Django trusts the proxy's X-Forwarded-Proto. Only set this when the proxy
+    # overwrites that header: otherwise a client can forge it.
+    if env_flag('DJANGO_TRUST_X_FORWARDED_PROTO', False):
+        SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -142,6 +169,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+# Where `manage.py collectstatic` gathers the files for the web server; without
+# it collectstatic refused to run, so there was no way to serve the CSS with
+# DEBUG off.
+STATIC_ROOT = os.environ.get('DJANGO_STATIC_ROOT') or os.path.join(BASE_DIR, 'staticfiles')
 
 
 # Logs all SQL queries

@@ -17,3 +17,13 @@ Two things need action from you regardless:
 - `DEBUG` and `ALLOWED_HOSTS` now come from `DJANGO_DEBUG` and
   `DJANGO_ALLOWED_HOSTS`. Set `DJANGO_DEBUG=false` anywhere that is not a
   developer machine.
+
+### Deployment settings (with `DJANGO_DEBUG=false`)
+
+| Variable | Default | Effect |
+| --- | --- | --- |
+| `DJANGO_SECURE_COOKIES` | `true` | `Secure` flag on the session and CSRF cookies. Set `false` only for an http-only deployment. |
+| `DJANGO_SECURE_SSL_REDIRECT` | `false` | Redirect every http request to https. |
+| `DJANGO_SECURE_HSTS_SECONDS` | `0` | `Strict-Transport-Security` max-age. Read Django's docs before enabling. |
+| `DJANGO_TRUST_X_FORWARDED_PROTO` | `false` | Trust `X-Forwarded-Proto: https` from a TLS-terminating proxy that overwrites that header. |
+| `DJANGO_STATIC_ROOT` | `<repo>/staticfiles` | Target of `manage.py collectstatic`. |
