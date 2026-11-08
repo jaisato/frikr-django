@@ -1,0 +1,25 @@
+version: 2
+updates:
+  # Django and DRF, pinned in requirements.txt. Patches of the 5.2 LTS line,
+  # security releases included, arrive as a weekly PR. Django 6 is a jump off
+  # the LTS that needs its own upgrade, so its majors are left out.
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      pip:
+        patterns: ['*']
+    ignore:
+      - dependency-name: django
+        update-types:
+          - version-update:semver-major
+
+  # The actions of .github/workflows, pinned to a commit SHA.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns: ['*']

@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Superseded PR runs are cancelled; runs on master are not.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  django:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        # The oldest Python that Django 5.2 supports, and the one the README
+        # recommends.
+        python-version: ['3.10', '3.12']
+    env:
+      PIP_DISABLE_PIP_VERSION_CHECK: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install requirements
+        run: pip install -r requirements.txt
+
+      - name: System checks
+        run: python manage.py check --fail-level WARNING
+
+      # A model change without its migration. frikr/tests.py checks it too;
+      # here it fails on its own line, with the migration that is missing.
+      - name: Migrations
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Tests
+        run: python manage.py test --verbosity 2
+
+      # Settings as a deployment loads them: DEBUG off, a real key and
+      # ALLOWED_HOSTS. Errors fail the job. HTTPS redirect and HSTS stay
+      # warnings, because they depend on where TLS ends (see the README).
+      - name: Deployment checks
+        run: |
+          DJANGO_SECRET_KEY=$(python -c 'import secrets; print(secrets.token_urlsafe(50))') \
+            python manage.py check --deploy
+        env:
+          DJANGO_DEBUG: 'false'
+          DJANGO_ALLOWED_HOSTS: example.com
