@@ -2,9 +2,11 @@
 import os
 import subprocess
 import sys
+from io import StringIO
 
 from django.conf import settings
-from django.test import SimpleTestCase
+from django.core.management import call_command
+from django.test import SimpleTestCase, TestCase
 
 LOAD_SETTINGS = 'import frikr.settings as s; print(s.SECRET_KEY)'
 
@@ -96,3 +98,22 @@ class DeploymentHardeningTestCase(SimpleTestCase):
 		flags = self.flags()
 
 		self.assertEqual(flags[:2], ['False', 'False'])
+
+
+class MigrationsUpToDateTestCase(TestCase):
+	"""
+	The models and the migrations describe the same schema.
+
+	photos/models.py had moved on - the bad-words validator on description and
+	the PD and TS licenses that settings.LICENSES adds - without a migration,
+	so the next `makemigrations` for any unrelated change would have swept
+	those in with it. Nothing ran `makemigrations --check`; this test does.
+	"""
+
+	def test_every_model_change_has_its_migration(self):
+		output = StringIO()
+
+		try:
+			call_command('makemigrations', '--check', '--dry-run', stdout=output, stderr=output)
+		except SystemExit:
+			self.fail('Model changes without a migration:\n' + output.getvalue())
