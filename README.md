@@ -27,3 +27,17 @@ Two things need action from you regardless:
 | `DJANGO_SECURE_HSTS_SECONDS` | `0` | `Strict-Transport-Security` max-age. Read Django's docs before enabling. |
 | `DJANGO_TRUST_X_FORWARDED_PROTO` | `false` | Trust `X-Forwarded-Proto: https` from a TLS-terminating proxy that overwrites that header. |
 | `DJANGO_STATIC_ROOT` | `<repo>/staticfiles` | Target of `manage.py collectstatic`. |
+
+## Checks
+
+```sh
+pip install -r requirements.txt
+python manage.py check
+python manage.py makemigrations --check --dry-run
+python manage.py test
+```
+
+`.github/workflows/ci.yml` runs them on every pull request and push to
+`master`, on Python 3.10 and 3.12, and then `manage.py check --deploy` with
+`DJANGO_DEBUG=false`. `.github/dependabot.yml` proposes, once a week, the patch
+releases of Django 5.2 and DRF and the updates of the pinned actions.
