@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import base64
+
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -332,6 +335,36 @@ class ProfileUpdateKeepsTheSessionTestCase(TestCase):
 		self.assertEqual(self.user.email, 'nueva@example.com')
 		self.assertTrue(self.user.check_password(self.password))
 		self.assertLoggedIn(self.client)
+
+	def test_changing_the_own_password_keeps_the_session_that_changed_it(self):
+		new_password = valid_password()
+
+		response = self.put(password=new_password)
+
+		self.assertEqual(response.status_code, 200, response.content)
+		self.user.refresh_from_db()
+		self.assertTrue(self.user.check_password(new_password))
+		self.assertLoggedIn(self.client)
+
+	def test_changing_the_password_still_ends_the_other_sessions(self):
+		other_device = Client()
+		other_device.login(username='anaruiz', password=self.password)
+
+		self.put(password=valid_password())
+
+		self.assertLoggedIn(other_device, logged_in=False)
+
+	def test_a_basic_auth_password_change_does_not_open_a_session(self):
+		client = Client()
+		credentials = base64.b64encode(('anaruiz:' + self.password).encode()).decode()
+
+		response = client.put(
+			self.url, self.data(password=valid_password()), content_type='application/json',
+			HTTP_AUTHORIZATION='Basic ' + credentials,
+		)
+
+		self.assertEqual(response.status_code, 200, response.content)
+		self.assertNotIn(settings.SESSION_COOKIE_NAME, response.cookies)
 
 	def test_staff_can_edit_an_account_without_resetting_its_password(self):
 		staff_password = valid_password()
