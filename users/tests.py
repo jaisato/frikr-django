@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils.crypto import get_random_string
 
@@ -294,3 +294,64 @@ class UsernameUniquenessTestCase(TestCase):
 		)
 
 		self.assertEqual(response.status_code, 200, response.content)
+
+
+class ProfileUpdateKeepsTheSessionTestCase(TestCase):
+	"""
+	PUT /api/1.0/users/<id> demanded the password on every update and re-hashed
+	it. Django signs each session with a hash of the password, so editing your
+	own e-mail logged you out on the next request, and staff could not correct
+	someone's name without resetting that person's password.
+	"""
+
+	def setUp(self):
+		self.password = valid_password()
+		self.user = User.objects.create_user(
+			'anaruiz', 'ana@example.com', self.password, first_name='Ana', last_name='Ruiz')
+		self.url = reverse('user_detail_api', args=[self.user.pk])
+		self.client.login(username='anaruiz', password=self.password)
+
+	def data(self, **changes):
+		data = {'first_name': 'Ana', 'last_name': 'Ruiz', 'username': 'anaruiz', 'email': 'ana@example.com'}
+		data.update(changes)
+		return data
+
+	def put(self, client=None, **changes):
+		client = client or self.client
+		return client.put(self.url, self.data(**changes), content_type='application/json')
+
+	def assertLoggedIn(self, client, logged_in=True):
+		status_code = client.get(reverse('user_photos')).status_code
+		self.assertEqual(status_code, 200 if logged_in else 302)
+
+	def test_an_update_without_a_password_keeps_it_and_the_session(self):
+		response = self.put(email='nueva@example.com')
+
+		self.assertEqual(response.status_code, 200, response.content)
+		self.user.refresh_from_db()
+		self.assertEqual(self.user.email, 'nueva@example.com')
+		self.assertTrue(self.user.check_password(self.password))
+		self.assertLoggedIn(self.client)
+
+	def test_staff_can_edit_an_account_without_resetting_its_password(self):
+		staff_password = valid_password()
+		User.objects.create_user('staffer', 'staff@example.com', staff_password, is_staff=True)
+		staff = Client()
+		staff.login(username='staffer', password=staff_password)
+
+		response = self.put(client=staff, first_name='Ana Maria')
+
+		self.assertEqual(response.status_code, 200, response.content)
+		self.user.refresh_from_db()
+		self.assertEqual(self.user.first_name, 'Ana Maria')
+		self.assertTrue(self.user.check_password(self.password))
+		self.assertLoggedIn(self.client)
+
+	def test_signing_up_still_requires_a_password(self):
+		response = Client().post(
+			reverse('user_list_api'), self.data(username='nuevo', email='nuevo@example.com'),
+			content_type='application/json',
+		)
+
+		self.assertEqual(response.status_code, 400)
+		self.assertIn('password', response.json())

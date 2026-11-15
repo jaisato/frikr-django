@@ -24,6 +24,15 @@ class UserSerializer(serializers.Serializer):
 	# out the stored hash on every read.
 	password = serializers.CharField(write_only=True)
 
+	def __init__(self, *args, **kwargs):
+		super(UserSerializer, self).__init__(*args, **kwargs)
+		# A new account needs a password; an update keeps the current one when
+		# none is sent. Demanding it on every PUT meant re-hashing it on every
+		# profile edit, which ends the sessions signed with the old hash - the
+		# user's own included - and left staff unable to correct someone's
+		# name without resetting that person's password.
+		self.fields['password'].required = self.instance is None
+
 	def create(self, validated_data):
 		"""
 		Create a user instance from validated data
