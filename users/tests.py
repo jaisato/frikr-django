@@ -380,6 +380,23 @@ class ProfileUpdateKeepsTheSessionTestCase(TestCase):
 		self.assertTrue(self.user.check_password(self.password))
 		self.assertLoggedIn(self.client)
 
+	def test_staff_resetting_a_password_leaves_the_staff_session_untouched(self):
+		staff_password = valid_password()
+		User.objects.create_user('staffer', 'staff@example.com', staff_password, is_staff=True)
+		staff = Client()
+		staff.login(username='staffer', password=staff_password)
+		session_key = staff.session.session_key
+
+		response = self.put(client=staff, password=valid_password())
+
+		self.assertEqual(response.status_code, 200, response.content)
+		# The staff session is not re-keyed and no cookie is sent again: only
+		# the sessions of the account whose password changed are affected.
+		self.assertNotIn(settings.SESSION_COOKIE_NAME, response.cookies)
+		self.assertEqual(staff.session.session_key, session_key)
+		self.assertLoggedIn(staff)
+		self.assertLoggedIn(self.client, logged_in=False)
+
 	def test_signing_up_still_requires_a_password(self):
 		response = Client().post(
 			reverse('user_list_api'), self.data(username='nuevo', email='nuevo@example.com'),
