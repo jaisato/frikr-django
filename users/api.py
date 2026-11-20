@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.models import User
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -78,9 +80,30 @@ class UserDetailAPI(APIView):
 		serializer = UserSerializer(instance=user, data=request.data)
 		if serializer.is_valid():
 			serializer.save()
+			self.keep_session_after_own_password_change(request, user, serializer.validated_data)
 			return Response(serializer.data, status=status.HTTP_200_OK)
 		else:
 			return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+	@staticmethod
+	def keep_session_after_own_password_change(request, user, validated_data):
+		"""
+		Django signs each session with a hash of the password, so a new password
+		ends every session opened with the old one. That is the point for the
+		other devices, but the session that made the change was dropped on its
+		next request too. update_session_auth_hash() is what Django's own
+		PasswordChangeView calls to keep it.
+
+		Only for a session-authenticated user changing their own password: a
+		staff member's session has nothing to do with someone else's password,
+		and a Basic-auth client has no session - writing the hash would open one
+		and send it a cookie it never asked for.
+		"""
+		if 'password' not in validated_data or user.pk != request.user.pk:
+			return
+
+		if isinstance(request.successful_authenticator, SessionAuthentication):
+			update_session_auth_hash(request, user)
 
 	def delete(self, request, id):
 		"""
