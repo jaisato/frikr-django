@@ -8,6 +8,7 @@
     <div class="list-group">
     {% include 'photos/photos_loop.html' with photos=user_photos %}
     </div>
+    {% include 'photos/pagination.html' %}
     {% else %}
         <p>No photos available.</p>
     {% endif %}
