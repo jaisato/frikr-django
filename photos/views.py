@@ -9,8 +9,13 @@ from django.utils.decorators import method_decorator
 
 from photos.forms import PhotoForm
 from photos.models import Photo, PUBLIC
+from django.core.paginator import Paginator
 from django.views.generic import View, ListView
 from django.db.models import Q
+
+# Photos per page on the HTML listings, the same page size the API uses
+# (REST_FRAMEWORK['PAGE_SIZE']).
+PHOTOS_PER_PAGE = 10
 
 
 class PhotosQuerySet(object):
@@ -130,13 +135,20 @@ class PhotoListView(View, PhotosQuerySet):
 		:param request: HttpRequest
 		:return: HttpResponse
 		"""
-		photos = self.get_photos_queryset(request)
+		# One page at a time. The view used to walk the whole queryset - every
+		# public photo, for an anonymous visitor - building a dict and an <img>
+		# for each on every request, so the cost of one GET /photos grew with
+		# the table and anyone could make the server pay it as often as they
+		# liked; the API listing was paginated from the start. get_page() never
+		# fails on ?page=: a value that is not a number gives the first page and
+		# one out of range the last, instead of an error.
+		page = Paginator(self.get_photos_queryset(request), PHOTOS_PER_PAGE).get_page(request.GET.get('page'))
 		photosView = []
-		for photo in photos:
+		for photo in page:
 			photoData = {"id": photo.pk, "name": photo.name, "url": photo.url, "description": photo.description}
 			photosView.append(photoData)
 
-		return render(request, 'photos/photos_list.html', {"photos_list": photosView})
+		return render(request, 'photos/photos_list.html', {"photos_list": photosView, "page_obj": page})
 
 
 class UserPhotoListView(ListView):
@@ -146,6 +158,11 @@ class UserPhotoListView(ListView):
 	model = Photo
 	template_name = 'photos/user_photos.html'
 	context_object_name = 'user_photos'
+	# Paginated like /photos, and for the same reason: the list used to be
+	# every photo the user had ever added, in no particular order - and
+	# without an order the pages could overlap.
+	paginate_by = PHOTOS_PER_PAGE
+	ordering = ('-created_at', '-pk')
 
 	def get_queryset(self):
 		qs = super(UserPhotoListView, self).get_queryset()

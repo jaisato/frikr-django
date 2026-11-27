@@ -2,7 +2,7 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from photos.models import Photo, PUBLIC
+from photos.models import Photo, PRIVATE, PUBLIC
 
 
 class PagesAndApiRespondTest(TestCase):
@@ -60,3 +60,55 @@ class PhotoListApiOrderTest(TestCase):
 
 		self.assertEqual(len(ids), 12)
 		self.assertEqual(ids, sorted(ids, reverse=True))
+
+
+class PhotoListPagesTest(TestCase):
+	"""
+	/photos and /my-photos show one page of photos at a time, newest first.
+	They used to render every photo in the table on every request.
+	"""
+
+	password = 'S3gura-Clave-123'
+
+	def setUp(self):
+		self.owner = User.objects.create_user('carla', 'carla@example.com', self.password)
+		other = User.objects.create_user('dani', 'dani@example.com', self.password)
+		for i in range(12):
+			Photo.objects.create(owner=self.owner, name='pub%d' % i, url='http://example.com/%d.jpg' % i,
+				license='CC', visibility=PUBLIC)
+		Photo.objects.create(owner=other, name='private', url='http://example.com/x.jpg',
+			license='CC', visibility=PRIVATE)
+
+	@staticmethod
+	def names(response):
+		return [photo['name'] for photo in response.context['photos_list']]
+
+	def test_the_public_listing_is_paginated_newest_first(self):
+		first = self.client.get('/photos')
+		second = self.client.get('/photos?page=2')
+
+		self.assertEqual(self.names(first), ['pub%d' % i for i in range(11, 1, -1)])
+		self.assertEqual(self.names(second), ['pub1', 'pub0'])
+		self.assertContains(first, 'href="?page=2"')
+		self.assertContains(second, 'href="?page=1"')
+
+	def test_a_bad_page_number_falls_back_to_a_real_page(self):
+		self.assertEqual(self.names(self.client.get('/photos?page=abc')), self.names(self.client.get('/photos')))
+		for page in ('0', '99'):
+			response = self.client.get('/photos?page=' + page)
+			self.assertEqual(response.status_code, 200, page)
+			self.assertEqual(self.names(response), ['pub1', 'pub0'], page)
+
+	def test_the_pages_still_leave_out_other_peoples_private_photos(self):
+		names = self.names(self.client.get('/photos')) + self.names(self.client.get('/photos?page=2'))
+		self.assertEqual(len(names), 12)
+		self.assertNotIn('private', names)
+
+	def test_my_photos_is_paginated_newest_first_too(self):
+		self.client.login(username='carla', password=self.password)
+		first = self.client.get('/my-photos')
+		second = self.client.get('/my-photos?page=2')
+
+		self.assertEqual([p.name for p in first.context['user_photos']], ['pub%d' % i for i in range(11, 1, -1)])
+		self.assertEqual([p.name for p in second.context['user_photos']], ['pub1', 'pub0'])
+		self.assertContains(first, 'href="?page=2"')
